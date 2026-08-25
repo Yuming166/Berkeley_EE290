@@ -1,7 +1,7 @@
 Cellular Communication System Modeling under Mobility
 
 <p align="center">
-  <b>EE290 — Wireless Networks</b><br>
+  <b>Yuming Gao </b><br>
   University of California, Berkeley
 </p>
 <p align="center">

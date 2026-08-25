@@ -50,37 +50,53 @@ Toolboxes	MATLAB 5G Toolbox (for CDL simulation)
 Technical Approach
 
 The project follows a progressive modeling framework:
+<h3 align="center">Progressive Modeling Framework</h3>
 
-┌──────────────────────────────┐
-│   Baseline Cellular Model    │
-│ Path Loss + Shadowing +      │
-│ Rayleigh Fading              │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│    Doppler-Aware Model       │
-│ Time-Correlated Fading       │
-│ Mobility-Dependent Channel   │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│    Monte Carlo Evaluation    │
-│ Multiple Channel Realizations│
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│    SISO / MIMO Modeling      │
-│       1×2 / 2×2 MIMO        │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│     5G NR CDL Channel        │
-│     CDL-D / 1×2 MIMO        │
-└──────────────────────────────┘
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>Baseline Cellular Model</b><br>
+      Path Loss + Shadowing + Rayleigh Fading
+    </td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Doppler-Aware Model</b><br>
+      Time-Correlated Fading<br>
+      Mobility-Dependent Channel Variation
+    </td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Monte Carlo Evaluation</b><br>
+      Multiple Channel Realizations
+    </td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>SISO / MIMO Modeling</b><br>
+      1×2 / 2×2 MIMO
+    </td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>5G NR CDL Channel</b><br>
+      CDL-D / 1×2 MIMO
+    </td>
+  </tr>
+</table>
 
 This structure allows the impact of increasingly realistic channel and antenna models to be evaluated while maintaining a consistent set of system-level performance metrics.
 
@@ -123,19 +139,19 @@ Rayleigh fading models multipath-induced small-scale variations in the received 
 
 Doppler Effect
 
-For a mobile user with velocity (v), the maximum Doppler frequency is approximated by
+For a mobile user with velocity \(v\), the maximum Doppler frequency is
 
-[
+$$
 f_D = \frac{v}{\lambda}
-= \frac{v f_c}{c},
-]
+    = \frac{v f_c}{c},
+$$
 
 where:
 
-* (v) is the UE velocity,
-* (f_c) is the carrier frequency,
-* (c) is the speed of light,
-* (\lambda) is the carrier wavelength.
+- \(v\) is the UE velocity,
+- \(f_c\) is the carrier frequency,
+- \(c\) is the speed of light,
+- \(\lambda\) is the carrier wavelength.
 
 The Doppler frequency is used to control the temporal variation of the simulated fading process.
 
@@ -151,27 +167,46 @@ As the UE moves through the network, changes in the strongest serving cell resul
 
 The overall connectivity process can be summarized as:
 
-UE Mobility
-     │
-     ▼
-Channel Variation
-     │
-     ▼
-Received Signal + Interference
-     │
-     ▼
-     SINR
-     │
-     ├──────────────┐
-     ▼              ▼
-Throughput       Cell Selection
-                      │
-                      ▼
-                   Handover
-                      │
-                      ▼
-                    RLF
+<h3 align="center">Cellular Mobility and Connectivity</h3>
 
+<table align="center">
+  <tr>
+    <td align="center"><b>UE Mobility</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Channel Variation</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Received Signal + Interference</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>SINR</b></td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>Throughput</b>
+    </td>
+    <td align="center">
+      <b>Cell Selection</b><br>
+      ↓<br>
+      Handover<br>
+      ↓<br>
+      RLF
+    </td>
+  </tr>
+</table>
 This allows the simulation to study the interaction between mobility, channel variation, handover behavior, and link reliability.
 
 ⸻
@@ -180,14 +215,14 @@ Performance Metrics
 
 SINR
 
-The signal-to-interference-plus-noise ratio is calculated as
+The signal-to-interference-plus-noise ratio is defined as
 
-[
+$$
 \mathrm{SINR}
-
+=
 \frac{P_{\mathrm{signal}}}
 {P_{\mathrm{interference}} + P_{\mathrm{noise}}}.
-]
+$$
 
 SINR is used as the primary instantaneous link-quality metric.
 
@@ -195,9 +230,11 @@ Throughput
 
 A Shannon-capacity approximation is used to estimate achievable throughput:
 
-[
+$$
 R = B\log_2(1+\mathrm{SINR}),
-]
+$$
+
+where \(B\) denotes the system bandwidth.
 
 where (B) denotes the system bandwidth.
 
@@ -274,35 +311,27 @@ This framework is particularly useful for comparing SISO and MIMO systems under 
 ⸻
 
 Repository Structure
-
+```text
 Berkeley_EE290/
-│
 ├── README.md
-│
 ├── src/
 │   ├── README.md
-│   │
 │   ├── baseline/
 │   │   └── mobility_cell_eval.m
-│   │
 │   ├── doppler/
 │   │   └── mobility_cell_eval_doppler.m
-│   │
 │   └── mimo/
 │       ├── mobility_cell_eval_mc_MIMO.m
 │       ├── mobility_SISO.m
 │       └── mobility_cdL_1x2_MIMO.m
-│
 ├── results/
 │   ├── figures/
 │   └── csv/
-│
 ├── docs/
 │   └── methodology.md
-│
 ├── LICENSE
-│
 └── .gitignore
+```
 
 Directory Description
 

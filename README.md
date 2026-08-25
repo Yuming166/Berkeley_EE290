@@ -217,12 +217,7 @@ SINR
 
 The signal-to-interference-plus-noise ratio is defined as
 
-$$
-\mathrm{SINR}
-=
-\frac{P_{\mathrm{signal}}}
-{P_{\mathrm{interference}} + P_{\mathrm{noise}}}.
-$$
+$$\mathrm{SINR} = \frac{P_{\mathrm{signal}}}{P_{\mathrm{interference}} + P_{\mathrm{noise}}}$$
 
 SINR is used as the primary instantaneous link-quality metric.
 

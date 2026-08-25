@@ -10,55 +10,59 @@ The simulation framework progressively incorporates propagation loss, shadowing,
 
 The system consists of multiple base stations and a mobile user equipment (UE).
 
-The UE moves through the cellular deployment at a specified velocity while the received signal power varies according to:
+At each simulation time step, the UE position is updated according to its velocity. The received power from each candidate cell is then calculated based on propagation loss, shadowing, fading, and channel variation.
 
-1. UE-to-base-station distance
-2. Path loss
-3. Shadowing
-4. Small-scale fading
-5. Doppler-induced temporal variation
+The overall modeling pipeline is:
 
-At each simulation time step, the received signal power from each candidate cell is evaluated.
+<table align="center">
+  <tr>
+    <td align="center"><b>UE Mobility</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Distance to Base Stations</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Path Loss + Shadowing</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Small-Scale Fading</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Doppler-Induced Channel Variation</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Received Signal + Interference</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>SINR</b></td>
+  </tr>
+</table>
 
-The serving cell is then selected according to the simulated link conditions.
-
-The overall simulation can be represented as
-
-UE Mobility
-     │
-     ▼
-Distance to Base Stations
-     │
-     ▼
-Path Loss
-     │
-     ├──────► Shadowing
-     │
-     └──────► Small-Scale Fading
-                    │
-                    ▼
-              Doppler Variation
-                    │
-                    ▼
-          Received Signal Power
-                    │
-                    ▼
-                   SINR
-              ┌─────┴─────┐
-              ▼           ▼
-         Throughput    Cell Selection
-                           │
-                           ▼
-                        Handover
-                           │
-                           ▼
-                          RLF
+The resulting SINR is then used to evaluate throughput, cell association, handover behavior, and radio link failure.
 
 ⸻
 
 2. Simulation Parameters
 
-The representative simulation configuration is summarized below.
+The representative system-level configuration is summarized below.
 
 Parameter	Value
 Carrier frequency	3.5 GHz
@@ -69,141 +73,104 @@ Time step	0.01 s
 UE velocity	30 / 90 / 150 mph
 Macro shadowing standard deviation	12 dB
 Small-cell shadowing standard deviation	14 dB
-MIMO gain in baseline model	3 dB
+Baseline MIMO gain	3 dB
 RLF timeout	0.2 s
 
-Some parameters may vary between exploratory simulation scripts. The values above describe the primary system-level configuration.
+Some parameters vary between exploratory implementations. The values above represent the primary system-level configuration.
 
 ⸻
 
 3. Mobility Model
 
-The UE follows a deterministic trajectory through the cellular deployment.
+The UE moves through the cellular deployment at a predefined velocity.
 
-For a simulation time (t), the UE position is represented by
+The three representative mobility conditions are:
 
-$$
-\mathbf{p}(t) =
-\begin{bmatrix}
-x(t) \
-y(t)
-\end{bmatrix}.
-$$
+Scenario	Velocity	Description
+Low Mobility	30 mph	Moderate mobility
+High Mobility	90 mph	High mobility
+Very High Mobility	150 mph	Extreme mobility
 
-The UE velocity is specified in miles per hour and converted to SI units before calculating propagation and Doppler effects.
+For a simulation time (t), the UE position can be represented as
 
-The simulations consider three representative mobility conditions:
+$$\mathbf{p}(t) = [x(t), y(t)]^T$$
 
-* 30 mph — moderate mobility
-* 90 mph — high mobility
-* 150 mph — very high mobility
+where (x(t)) and (y(t)) denote the horizontal coordinates of the UE.
 
-Increasing velocity affects the channel in two ways:
+Increasing UE velocity affects the system through two primary mechanisms:
 
-1. The UE moves through different large-scale propagation environments more rapidly.
-2. The Doppler frequency increases, producing faster small-scale channel variation.
+* Faster movement through large-scale propagation environments.
+* Increased Doppler frequency and faster small-scale channel variation.
 
 ⸻
 
 4. Propagation Model
 
-The received power is modeled using a combination of path loss, shadowing, and small-scale fading.
+The received signal power is modeled using path loss, shadowing, and small-scale fading.
 
-A general received-power model can be expressed as
+A general received-power model is
 
-$$
-P_r(d)
-
-P_t
-+
-G_t
-+
-G_r
-
-PL(d)
-+
-X_\sigma
-+
-F,
-$$
+$$P_r(d) = P_t + G_t + G_r - PL(d) + X_{\sigma} + F$$
 
 where:
 
-* (P_t) is transmit power,
-* (G_t) and (G_r) are transmitter and receiver antenna gains,
-* (PL(d)) is distance-dependent path loss,
-* (X_\sigma) represents log-normal shadowing,
-* (F) represents small-scale fading in dB.
+Symbol	Description
+(P_t)	Transmit power
+(G_t)	Transmitter antenna gain
+(G_r)	Receiver antenna gain
+(PL(d))	Distance-dependent path loss
+(X_{\sigma})	Log-normal shadowing
+(F)	Small-scale fading contribution
+
+The model combines large-scale propagation effects with rapidly varying small-scale channel conditions.
 
 ⸻
 
 4.1 Path Loss
 
-The baseline cellular model uses a distance-dependent path-loss model of the form
+The baseline cellular model uses the following distance-dependent path-loss model:
 
-$$
-PL(d)
-
-128.1
-+
-37.6\log_{10}(d_{\mathrm{km}}),
-$$
+$$PL(d) = 128.1 + 37.6\log_{10}(d_{\mathrm{km}})$$
 
 where (d_{\mathrm{km}}) is the transmitter-to-UE distance in kilometers.
 
-The model captures the large-scale reduction in received signal power as the UE moves away from a serving cell.
+This model captures the reduction in received power as the UE moves farther from a base station.
 
 ⸻
 
 4.2 Shadowing
 
-Log-normal shadowing is used to represent large-scale variations caused by obstacles and local propagation environments.
+Log-normal shadowing is used to represent slow variations in received power caused by obstacles and local propagation environments.
 
-The shadowing term is modeled as a Gaussian random variable in dB:
+The shadowing term is modeled as
 
-$$
-X_\sigma \sim \mathcal{N}(0,\sigma^2).
-$$
+$$X_{\sigma} \sim \mathcal{N}(0,\sigma^2)$$
 
-Representative standard deviations are:
+with representative standard deviations of
 
-$$
-\sigma_{\mathrm{macro}} = 12\ \mathrm{dB},
-$$
+$$\sigma_{\mathrm{macro}} = 12\ \mathrm{dB}$$
 
 and
 
-$$
-\sigma_{\mathrm{small}} = 14\ \mathrm{dB}.
-$$
+$$\sigma_{\mathrm{small}} = 14\ \mathrm{dB}$$
 
-The shadowing component is applied independently to the relevant propagation links in the system-level model.
+for macro and small-cell links, respectively.
 
 ⸻
 
 5. Small-Scale Fading
 
-The baseline implementations use Rayleigh fading to represent rapid signal fluctuations caused by multipath propagation.
+The baseline implementations use Rayleigh fading to model rapid signal fluctuations caused by multipath propagation.
 
-For a complex baseband channel coefficient,
+A normalized complex channel coefficient can be represented as
 
-$$
-h \sim \mathcal{CN}(0,1).
-$$
+$$h \sim \mathcal{CN}(0,1)$$
 
-The corresponding channel power gain is
+and the corresponding channel power gain is
 
-$$
-|h|^2.
-$$
+$$G_{\mathrm{fading}} = |h|^2$$
 
-The received signal power can therefore be represented as
-
-$$
-P_r \propto |h|^2.
-$$
-
-Rayleigh fading is particularly useful for investigating how rapidly changing small-scale propagation conditions interact with high user mobility.
+The received signal power is therefore affected by both large-scale propagation and small-scale fading.
 
 ⸻
 
@@ -213,28 +180,21 @@ Rayleigh fading is particularly useful for investigating how rapidly changing sm
 
 For a UE moving with velocity (v), the maximum Doppler frequency is approximated by
 
-$$
-f_D
-
-\frac{v}{\lambda}
-
-\frac{v f_c}{c},
-$$
+$$f_D = \frac{v}{\lambda} = \frac{v f_c}{c}$$
 
 where:
 
-* (v) is the UE velocity,
-* (\lambda) is the wavelength,
-* (f_c) is the carrier frequency,
-* (c) is the speed of light.
+Symbol	Description
+(v)	UE velocity
+(\lambda)	Carrier wavelength
+(f_c)	Carrier frequency
+(c)	Speed of light
 
-The wavelength is
+The wavelength is given by
 
-$$
-\lambda = \frac{c}{f_c}.
-$$
+$$\lambda = \frac{c}{f_c}$$
 
-At a fixed carrier frequency, the Doppler frequency therefore increases approximately linearly with UE velocity.
+Therefore, for a fixed carrier frequency, Doppler frequency increases approximately linearly with UE velocity.
 
 ⸻
 
@@ -242,31 +202,21 @@ At a fixed carrier frequency, the Doppler frequency therefore increases approxim
 
 Independent fading samples at every simulation step would not accurately represent a continuously moving wireless channel.
 
-The Doppler-aware implementation therefore introduces temporal correlation into the fading process.
+The Doppler-aware implementation therefore introduces temporal correlation into the fading process using a Doppler-dependent filtering approach.
 
-The simulated fading sequence is generated from random samples and processed using a Doppler-dependent low-pass filtering approach.
+Conceptually, the generated fading process can be represented as
 
-Conceptually,
-
-$$
-h(t)
-
-\mathcal{F}_{f_D}{w(t)},
-$$
+$$h[n] = \mathcal{F}_{f_D}{w[n]}$$
 
 where:
 
-* (w(t)) represents a random excitation process,
-* (\mathcal{F}_{f_D}) represents the Doppler-dependent filtering operation,
-* (h(t)) is the resulting time-correlated fading process.
+* (w[n]) is a random excitation sequence.
+* (\mathcal{F}_{f_D}) represents the Doppler-dependent filtering operation.
+* (h[n]) is the resulting time-correlated fading process.
 
-The resulting channel varies more rapidly as the Doppler frequency increases.
+As (f_D) increases, the channel varies more rapidly with time.
 
-Modeling Note
-
-This implementation is a system-level approximation of Doppler-induced temporal correlation. It is not intended to reproduce an exact Jakes/Clarke Doppler spectrum.
-
-The more detailed 5G NR CDL implementation provides a higher-fidelity alternative for selected experiments.
+Modeling note: This implementation is a system-level approximation of Doppler-induced temporal correlation. It is not intended to reproduce an exact Jakes/Clarke Doppler spectrum. The 5G NR CDL implementation provides a higher-fidelity channel model for selected experiments.
 
 ⸻
 
@@ -276,67 +226,45 @@ At each time step, the serving-cell signal is distinguished from interference ge
 
 The signal-to-interference-plus-noise ratio is defined as
 
-$$
-\mathrm{SINR}
-
-\frac{P_{\mathrm{signal}}}
-{P_{\mathrm{interference}} + P_{\mathrm{noise}}}.
-$$
-
-In linear scale, the received powers are summed before calculating SINR.
+$$\mathrm{SINR} = \frac{P_{\mathrm{signal}}}{P_{\mathrm{interference}} + P_{\mathrm{noise}}}$$
 
 The corresponding dB representation is
 
-$$
-\mathrm{SINR}_{\mathrm{dB}}
+$$\mathrm{SINR}{\mathrm{dB}} = 10\log{10}(\mathrm{SINR})$$
 
-10\log_{10}(\mathrm{SINR}).
-$$
-
-SINR serves as the central link-quality metric in the simulation framework.
+SINR is the primary instantaneous link-quality metric in the simulation framework.
 
 ⸻
 
 8. Noise Model
 
-The thermal noise power is approximated by
+The thermal noise power is given by
 
-$$
-P_N = kTB,
-$$
+$$P_N = kTB$$
 
 where:
 
-* (k) is the Boltzmann constant,
-* (T) is the reference temperature,
-* (B) is the system bandwidth.
+Symbol	Description
+(k)	Boltzmann constant
+(T)	Reference temperature
+(B)	System bandwidth
 
-The receiver noise figure is incorporated into the effective noise level.
+When expressed in dBm, the effective receiver noise power is approximated by
 
-In dBm, the thermal noise power can be represented as
-
-$$
-P_N[\mathrm{dBm}]
-
--174
-+
-10\log_{10}(B)
-+
-NF,
-$$
+$$P_N[\mathrm{dBm}] = -174 + 10\log_{10}(B) + NF$$
 
 where:
 
-* (B) is expressed in Hz,
+* (B) is the bandwidth in Hz.
 * (NF) is the receiver noise figure in dB.
 
-For the representative configuration,
+For the representative configuration:
 
-$$
-B = 10\ \mathrm{MHz},
-\qquad
-NF = 7\ \mathrm{dB}.
-$$
+$$B = 10\ \mathrm{MHz}$$
+
+and
+
+$$NF = 7\ \mathrm{dB}$$
 
 ⸻
 
@@ -344,97 +272,77 @@ $$
 
 The instantaneous achievable throughput is approximated using the Shannon capacity expression
 
-$$
-R
+$$R = B\log_2(1+\mathrm{SINR})$$
 
-B\log_2(1+\mathrm{SINR}),
-$$
+where (B) is the system bandwidth.
 
-where (B) is the channel bandwidth.
+The resulting data rate is converted to Mbps for visualization and comparison.
 
-The resulting throughput is converted to Mbps for visualization and comparison.
-
-This model provides a theoretical upper-bound-style system-level estimate rather than a full 5G NR scheduler or modulation-and-coding implementation.
-
-Therefore, the throughput results should be interpreted primarily for relative performance comparison across mobility, deployment, and antenna configurations.
+This model is intended for system-level comparison rather than detailed 5G NR link-level throughput prediction. It does not explicitly model scheduling, modulation and coding schemes, HARQ, or protocol overhead.
 
 ⸻
 
 10. Cell Association
 
-At each simulation time step, the UE evaluates the candidate cells and identifies the strongest serving link according to the implemented association criterion.
+At each simulation time step, the UE evaluates the candidate cells and selects the serving cell according to the implemented link-quality criterion.
 
-The serving cell can therefore change as the UE moves through the network.
+The cell-association process can be summarized as:
 
-The basic process is:
+<table align="center">
+  <tr>
+    <td align="center"><b>Candidate Cells</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Received Link Quality</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Serving Cell Selection</b></td>
+  </tr>
+</table>
 
-Candidate Cells
-      │
-      ▼
-Received Link Quality
-      │
-      ▼
-Best Serving Cell
-      │
-      ▼
-Current Serving Cell
-
-This mechanism allows the simulation to capture mobility-induced changes in cell association.
+As the UE moves, the selected serving cell may change.
 
 ⸻
 
 11. Handover Modeling
 
-A handover occurs when the selected serving cell changes from the previously serving cell.
+A handover event is recorded when the selected serving cell changes.
 
-The handover count is therefore updated according to
+The handover count can be represented as
 
-$$
-N_{\mathrm{HO}}
-\leftarrow
-N_{\mathrm{HO}} + 1
-$$
+$$N_{\mathrm{HO}} \leftarrow N_{\mathrm{HO}} + 1$$
 
-whenever
+when
 
-$$
-\mathrm{Cell}{t}
-\neq
-\mathrm{Cell}{t-1}.
-$$
+$$\mathrm{Cell}t \neq \mathrm{Cell}{t-1}$$
 
-The total handover frequency is used as a mobility-management metric.
+The total number of handovers is used as a mobility-management metric.
 
-A high handover rate may indicate that the UE is moving rapidly through overlapping coverage regions or that the deployment contains many closely spaced cells.
+A high handover rate can occur when the UE moves rapidly through overlapping coverage regions or when cells are densely deployed.
 
 ⸻
 
 12. Radio Link Failure
 
-Radio Link Failure is used to characterize severe and persistent link degradation.
+Radio Link Failure (RLF) is used to characterize persistent link degradation.
 
-An RLF event is triggered when
+An RLF condition is triggered when
 
-$$
-\mathrm{SINR}{\mathrm{dB}}
-<
-\gamma{\mathrm{RLF}}
-$$
+$$\mathrm{SINR}{\mathrm{dB}} < \gamma{\mathrm{RLF}}$$
 
-for longer than a configured timeout:
+for longer than the configured timeout
 
-$$
-T_{\mathrm{RLF}}
+$$T_{\mathrm{RLF}} = 0.2\ \mathrm{s}$$
 
-0.2\ \mathrm{s}.
-$$
+The persistence requirement distinguishes temporary fading fluctuations from sustained connectivity degradation.
 
-The RLF mechanism therefore distinguishes between:
-
-* temporary SINR fluctuations,
-* and persistent link degradation.
-
-This is particularly important for high-mobility scenarios, where short-term fading events may otherwise be incorrectly interpreted as complete connectivity failures.
+This is particularly important in high-mobility scenarios, where short-term fading events can cause temporary SINR drops without necessarily representing a complete link failure.
 
 ⸻
 
@@ -442,42 +350,34 @@ This is particularly important for high-mobility scenarios, where short-term fad
 
 The SISO implementation provides a reference configuration with one transmit and one receive antenna.
 
-The SISO system is used as the baseline for evaluating the impact of spatial processing.
+The SISO system is used as a baseline for evaluating the effect of additional spatial degrees of freedom.
 
-Its main outputs are:
+The primary outputs are:
 
 * SINR
 * Throughput
-* Handover events
-* RLF events
-
-The SISO implementation provides a direct comparison point for the subsequent MIMO experiments.
+* Handover frequency
+* Radio Link Failure
 
 ⸻
 
 14. MIMO Modeling
 
-The project includes two different levels of MIMO modeling.
+The project contains two levels of MIMO modeling.
 
 14.1 Simplified MIMO Gain
 
-The baseline system-level implementation uses a simplified MIMO gain:
+The baseline system-level implementation uses a simplified MIMO link-budget gain.
 
-$$
-\mathrm{SINR}_{\mathrm{MIMO,dB}}
+The effective SINR is modeled as
 
-\mathrm{SINR}{\mathrm{SISO,dB}}
-+
-G{\mathrm{MIMO}},
-$$
+$$\mathrm{SINR}{\mathrm{MIMO,dB}} = \mathrm{SINR}{\mathrm{SISO,dB}} + G_{\mathrm{MIMO}}$$
 
-where the representative gain is
+with a representative gain of
 
-$$
-G_{\mathrm{MIMO}} = 3\ \mathrm{dB}.
-$$
+$$G_{\mathrm{MIMO}} = 3\ \mathrm{dB}$$
 
-This approach provides a computationally inexpensive way to investigate the potential system-level impact of MIMO.
+This provides a computationally inexpensive method for evaluating the potential system-level impact of MIMO.
 
 ⸻
 
@@ -487,39 +387,34 @@ The Monte Carlo MIMO implementation explicitly defines the transmit and receive 
 
 For the 2×2 configuration:
 
-$$
-N_t = 2,
-\qquad
-N_r = 2.
-$$
+$$N_t = 2$$
 
-This allows the simulation to distinguish antenna configuration from the simplified link-budget approximation.
+$$N_r = 2$$
 
-The explicit MIMO simulations are used for statistical comparisons under multiple channel realizations.
+The explicit configuration allows antenna dimensions to be represented directly rather than through a fixed link-budget gain.
 
 ⸻
 
 15. Monte Carlo Evaluation
 
-Wireless channel realizations are stochastic. A single fading realization may therefore produce results that are not representative of the underlying system behavior.
+Wireless channel realizations are stochastic. A single fading trajectory may therefore not be representative of the overall system behavior.
 
-Monte Carlo simulations address this issue by repeating the experiment over multiple channel realizations.
+Monte Carlo simulations address this issue by repeating the experiment across multiple channel realizations.
 
 For a metric (X), the empirical mean is
 
-$$
-\bar{X}
+$$\bar{X} = \frac{1}{N}\sum_{i=1}^{N}X_i$$
 
-\frac{1}{N}
-\sum_{i=1}^{N} X_i,
-$$
+where (N) is the number of independent realizations.
 
-where (N) is the number of realizations.
+The Monte Carlo framework allows the simulations to characterize:
 
-The simulations can therefore characterize both:
-
-* average system performance,
-* and performance variability.
+* Average SINR
+* SINR distribution
+* Average throughput
+* Throughput distribution
+* Handover frequency
+* RLF probability
 
 This is particularly useful for comparing SISO and MIMO configurations.
 
@@ -533,12 +428,12 @@ The mobility_cdL_1x2_MIMO.m implementation uses a Clustered Delay Line (CDL-D) c
 
 Compared with the simplified Rayleigh fading implementation, the CDL model provides a more detailed representation of multipath propagation.
 
-The channel incorporates effects including:
+The channel model incorporates:
 
-* Multipath components
+* Multipath propagation
 * Delay spread
-* Time-varying fading
 * Doppler effects
+* Time-varying fading
 * Multiple receive antennas
 * Spatial channel variation
 
@@ -548,20 +443,36 @@ The CDL implementation therefore serves as a higher-fidelity extension of the sy
 
 17. Simulation Scenarios
 
-The simulations investigate three representative UE mobility conditions:
+The simulations consider three representative UE mobility conditions:
 
-Scenario	Velocity	Purpose
-Low Mobility	30 mph	Moderate channel variation
-High Mobility	90 mph	Stronger Doppler effects
-Very High Mobility	150 mph	Severe mobility-induced variation
-
-These scenarios are evaluated across different network and antenna configurations.
+<table align="center">
+  <tr>
+    <th>Scenario</th>
+    <th>Velocity</th>
+    <th>Purpose</th>
+  </tr>
+  <tr>
+    <td align="center">Low Mobility</td>
+    <td align="center">30 mph</td>
+    <td align="center">Moderate channel variation</td>
+  </tr>
+  <tr>
+    <td align="center">High Mobility</td>
+    <td align="center">90 mph</td>
+    <td align="center">Stronger Doppler effects</td>
+  </tr>
+  <tr>
+    <td align="center">Very High Mobility</td>
+    <td align="center">150 mph</td>
+    <td align="center">Severe mobility-induced variation</td>
+  </tr>
+</table>
 
 ⸻
 
 18. Deployment Configurations
 
-The baseline simulation considers several cellular deployment types.
+The baseline simulation considers several cellular deployment configurations.
 
 Macro-Only
 
@@ -573,56 +484,96 @@ Macro + Small Cells
 
 Small cells are introduced into the macro-cell environment.
 
-This configuration allows the effect of heterogeneous networks on signal quality and handover behavior to be investigated.
+This configuration allows the effects of heterogeneous deployment on signal quality and handover behavior to be investigated.
 
 Dense Small-Cell Deployment
 
-A denser small-cell configuration is used to examine the trade-off between improved local signal strength and increased handover activity.
+A denser small-cell configuration is used to investigate the trade-off between improved local signal strength and increased handover activity.
 
 ⸻
 
-19. Simulation Pipeline
+19. Complete Simulation Pipeline
 
-The complete simulation process can be summarized as:
+The complete simulation workflow is summarized below.
 
-System Parameters
-       │
-       ▼
-Cellular Deployment
-       │
-       ▼
-UE Mobility
-       │
-       ▼
-Distance Calculation
-       │
-       ▼
-Path Loss
-       │
-       ├──────────────┐
-       ▼              ▼
-   Shadowing      Small-Scale Fading
-                        │
-                        ▼
-                     Doppler
-                        │
-                        ▼
-             Received Signal Power
-                        │
-                        ▼
-                 Interference + Noise
-                        │
-                        ▼
-                       SINR
-                 ┌──────┴──────┐
-                 ▼             ▼
-            Throughput    Cell Association
-                                │
-                                ▼
-                             Handover
-                                │
-                                ▼
-                               RLF
+<table align="center">
+  <tr>
+    <td align="center"><b>System Parameters</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Cellular Deployment</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>UE Mobility</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Distance Calculation</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Path Loss + Shadowing</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Small-Scale Fading + Doppler</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Received Signal + Interference</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>SINR</b></td>
+  </tr>
+</table>
+
+The resulting SINR is then used by two main branches:
+
+<table align="center">
+  <tr>
+    <td align="center"><b>SINR</b></td>
+  </tr>
+  <tr>
+    <td align="center">↙　　　　　　　　　↘</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Throughput</b></td>
+    <td align="center"><b>Cell Association</b></td>
+  </tr>
+  <tr>
+    <td align="center"></td>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"></td>
+    <td align="center"><b>Handover</b></td>
+  </tr>
+  <tr>
+    <td align="center"></td>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"></td>
+    <td align="center"><b>RLF</b></td>
+  </tr>
+</table>
 
 ⸻
 
@@ -636,11 +587,11 @@ The project focuses on system-level behavior rather than detailed physical-layer
 
 Propagation
 
-Path loss, shadowing, and fading are modeled using analytical approximations.
+Path loss, shadowing, and fading are represented using analytical models.
 
 Throughput
 
-Throughput is estimated using Shannon capacity rather than a full 5G NR modulation and coding scheme.
+Throughput is estimated using Shannon capacity rather than a full 5G NR modulation and coding implementation.
 
 Handover
 
@@ -656,22 +607,54 @@ The Doppler-aware Rayleigh implementation uses a filtering-based approximation o
 
 CDL
 
-The CDL implementation provides a higher-fidelity channel model but is used as an extension rather than replacing the system-level baseline.
+The CDL implementation provides a higher-fidelity 5G NR channel model and is used as an extension of the system-level baseline.
 
 ⸻
 
 21. Model Fidelity
 
-The different implementations provide progressively more detailed representations of the wireless channel:
+The different implementations provide progressively more detailed representations of the wireless channel.
 
-Implementation	Channel Representation	Antenna Model	Evaluation
-Baseline	Path loss + shadowing + Rayleigh	Simplified MIMO gain	Single simulation
-Doppler	Time-correlated Rayleigh	System-level	Mobility study
-SISO	Time-varying channel	1×1	Reference
-Monte Carlo MIMO	Stochastic channel	2×2	Statistical
-CDL	5G NR CDL-D	1×2	Higher fidelity
+<table align="center">
+  <tr>
+    <th>Implementation</th>
+    <th>Channel Model</th>
+    <th>Antenna Model</th>
+    <th>Evaluation</th>
+  </tr>
+  <tr>
+    <td>Baseline</td>
+    <td>Path Loss + Shadowing + Rayleigh</td>
+    <td>Simplified MIMO Gain</td>
+    <td>System-Level</td>
+  </tr>
+  <tr>
+    <td>Doppler</td>
+    <td>Time-Correlated Rayleigh</td>
+    <td>System-Level</td>
+    <td>Mobility Study</td>
+  </tr>
+  <tr>
+    <td>SISO</td>
+    <td>Time-Varying Channel</td>
+    <td>1×1</td>
+    <td>Reference</td>
+  </tr>
+  <tr>
+    <td>Monte Carlo MIMO</td>
+    <td>Stochastic Channel</td>
+    <td>2×2</td>
+    <td>Statistical Evaluation</td>
+  </tr>
+  <tr>
+    <td>CDL</td>
+    <td>5G NR CDL-D</td>
+    <td>1×2</td>
+    <td>Higher Fidelity</td>
+  </tr>
+</table>
 
-This progression allows the project to balance computational efficiency and physical modeling fidelity.
+This progression allows computationally efficient system-level analysis to be compared with more detailed channel representations.
 
 ⸻
 
@@ -680,10 +663,11 @@ This progression allows the project to balance computational efficiency and phys
 To reproduce the simulations:
 
 1. Install MATLAB.
-2. Add the repository to the MATLAB path.
-3. Run the desired simulation script under src/.
-4. Adjust system parameters at the beginning of the corresponding script.
-5. Save the resulting metrics and figures under results/.
+2. Clone or download this repository.
+3. Add the repository to the MATLAB path.
+4. Navigate to the desired directory under src/.
+5. Run the corresponding MATLAB script.
+6. Save selected figures and numerical results under results/.
 
 The CDL implementation additionally requires the MATLAB 5G Toolbox.
 
@@ -700,22 +684,36 @@ For meaningful comparisons, system parameters should remain fixed while changing
 
 The methodology establishes a progressive framework for studying cellular connectivity under mobility.
 
-Starting from a conventional system-level propagation model, the project introduces Doppler-dependent temporal fading, Monte Carlo statistical evaluation, explicit MIMO configurations, and finally a 5G NR CDL channel model.
+The project connects physical channel variation to system-level connectivity metrics through the following relationship:
 
-The resulting framework connects physical channel variation to system-level connectivity metrics:
+<table align="center">
+  <tr>
+    <td align="center"><b>Mobility</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Doppler</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Channel Variation</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>SINR</b></td>
+  </tr>
+  <tr>
+    <td align="center">↓</td>
+  </tr>
+  <tr>
+    <td align="center"><b>Throughput / Handover / RLF</b></td>
+  </tr>
+</table>
 
-$$
-\boxed{
-\text{Mobility}
-\rightarrow
-\text{Doppler}
-\rightarrow
-\text{Channel Variation}
-\rightarrow
-\text{SINR}
-\rightarrow
-\text{Throughput / Handover / RLF}
-}
-$$
-
-This structure provides a consistent basis for comparing mobility conditions, cellular deployment strategies, and antenna configurations.
+The resulting framework provides a consistent basis for comparing mobility conditions, cellular deployment strategies, and antenna configurations under progressively more realistic wireless channel models.

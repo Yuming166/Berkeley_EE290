@@ -320,10 +320,11 @@ Berkeley_EE290/
 │       ├── mobility_SISO.m
 │       └── mobility_cdL_1x2_MIMO.m
 ├── results/
-│   ├── figures/
-│   └── csv/
+│   ├── figure/
+│   └── data/
 ├── docs/
-│   └── methodology.md
+│   ├── methodology.md
+│   └── slides/
 ├── LICENSE
 └── .gitignore
 ```

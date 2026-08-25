@@ -498,3 +498,6 @@ License
 This repository is intended primarily for educational and research demonstration purposes.
 
 See LICENSE for details.
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

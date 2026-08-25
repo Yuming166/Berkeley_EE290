@@ -1,4 +1,4 @@
-Cellular Communication System Modeling under Mobility
+<h1 align="center"><strong>Cellular Communication System Modeling under Mobility</strong></h1>
 
 <p align="center">
   <b>Yuming Gao </b><br>

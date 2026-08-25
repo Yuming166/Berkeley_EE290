@@ -1,1 +1,282 @@
+Simulation Source Code
 
+This directory contains the MATLAB implementations used to model and evaluate cellular connectivity under user mobility.
+
+The simulation framework is organized progressively, from a baseline system-level cellular model to Doppler-aware fading, Monte Carlo evaluation, explicit MIMO modeling, and 5G NR CDL channel modeling.
+
+Directory Structure
+
+src/
+├── baseline/
+│   └── mobility_cell_eval.m
+│
+├── doppler/
+│   └── mobility_cell_eval_doppler.m
+│
+└── mimo/
+    ├── mobility_cell_eval_mc_MIMO.m
+    ├── mobility_SISO.m
+    └── mobility_cdL_1x2_MIMO.m
+
+⸻
+
+1. Baseline Cellular Model
+
+baseline/mobility_cell_eval.m
+
+This script implements the baseline system-level cellular mobility simulation.
+
+Main Components
+
+* Multi-cell cellular deployment
+* Macro and small-cell configurations
+* User mobility at different speeds
+* Distance-dependent path loss
+* Log-normal shadowing
+* Rayleigh small-scale fading
+* SINR calculation
+* Shannon-based throughput estimation
+* Cell association and handover
+* Radio Link Failure (RLF) detection
+* Simplified MIMO link-budget gain
+
+Experimental Variables
+
+The baseline model evaluates several mobility and deployment conditions, including:
+
+* UE speeds of 30, 90, and 150 mph
+* Macro-only deployment
+* Macro + small-cell deployment
+* Dense small-cell deployment
+
+This implementation serves as the reference model for subsequent channel and antenna extensions.
+
+⸻
+
+2. Doppler-Aware Channel Model
+
+doppler/mobility_cell_eval_doppler.m
+
+This script extends the baseline model by introducing mobility-dependent Doppler effects and time-correlated channel variations.
+
+For a user moving at velocity (v), the maximum Doppler frequency is approximated by
+
+[
+f_D = \frac{v}{\lambda}
+= \frac{v f_c}{c},
+]
+
+where:
+
+* (v) is the UE velocity,
+* (f_c) is the carrier frequency,
+* (c) is the speed of light,
+* (\lambda) is the carrier wavelength.
+
+The Doppler frequency is then used to control the temporal correlation of the simulated fading process.
+
+Channel Model
+
+The simulation combines:
+
+[
+\text{Path Loss}
++
+\text{Shadowing}
++
+\text{Time-Correlated Small-Scale Fading}.
+]
+
+The fading process is generated using Doppler-dependent filtering to approximate the temporal correlation introduced by high mobility.
+
+Additional Evaluation
+
+The Doppler-aware implementation evaluates:
+
+* Instantaneous SINR
+* Throughput
+* Handover events
+* Radio Link Failure
+* Mobility-induced channel fluctuations
+* Monte Carlo performance statistics
+
+This model is used to investigate how increasing UE velocity affects wireless link stability and connectivity.
+
+⸻
+
+3. Monte Carlo MIMO Model
+
+mimo/mobility_cell_eval_mc_MIMO.m
+
+This script extends the Doppler-aware simulation with an explicit antenna configuration and Monte Carlo evaluation.
+
+The default configuration uses:
+
+Transmit antennas: 2
+Receive antennas: 2
+MIMO configuration: 2 × 2
+
+Unlike the simplified MIMO gain used in the baseline implementation, this model explicitly represents the transmit and receive antenna dimensions in the simulation.
+
+Evaluated Metrics
+
+The Monte Carlo simulations characterize the distribution of:
+
+* SINR
+* Throughput
+* Handover frequency
+* Radio Link Failure probability
+
+under different mobility conditions.
+
+Repeated channel realizations are used to reduce the influence of individual fading realizations and obtain more robust performance estimates.
+
+⸻
+
+4. SISO Baseline
+
+mimo/mobility_SISO.m
+
+This script provides a SISO reference implementation for comparison with MIMO configurations.
+
+The SISO model uses a single transmit and receive antenna and evaluates cellular connectivity under mobility using the same general system-level metrics:
+
+* SINR
+* Throughput
+* Handover
+* Radio Link Failure
+
+The SISO implementation serves as the baseline for evaluating the benefits of additional spatial degrees of freedom.
+
+⸻
+
+5. 5G NR CDL Channel Model
+
+mimo/mobility_cdL_1x2_MIMO.m
+
+This script provides a more advanced channel-modeling implementation based on the 5G NR Clustered Delay Line (CDL) channel model.
+
+The implementation uses MATLAB 5G Toolbox functionality to model a:
+
+1 × 2 MIMO
+
+configuration with a CDL-D channel profile.
+
+Channel Features
+
+The model incorporates:
+
+* 5G NR CDL channel modeling
+* Multipath propagation
+* Delay spread
+* Time-varying fading
+* Doppler effects
+* Multiple receive antennas
+* High-mobility channel variation
+
+The resulting channel model provides a higher-fidelity representation of time-varying wireless propagation than the simplified Rayleigh fading models used in the earlier simulations.
+
+⸻
+
+6. Simulation Progression
+
+The implementations can be viewed as a progressive modeling pipeline:
+
+Baseline Cellular Model
+        │
+        ▼
+Path Loss + Shadowing + Rayleigh Fading
+        │
+        ▼
+Doppler-Aware Time-Correlated Fading
+        │
+        ▼
+Monte Carlo Evaluation
+        │
+        ▼
+Explicit SISO / MIMO Modeling
+        │
+        ▼
+5G NR CDL Channel Model
+
+This progression allows the effects of increasingly realistic channel and antenna models to be studied while retaining a consistent set of system-level performance metrics.
+
+⸻
+
+7. Common Performance Metrics
+
+The simulation scripts primarily evaluate four metrics.
+
+SINR
+
+The signal-to-interference-plus-noise ratio is calculated as
+
+[
+\mathrm{SINR}
+
+\frac{P_{\mathrm{signal}}}
+{P_{\mathrm{interference}}+P_{\mathrm{noise}}}.
+]
+
+SINR characterizes instantaneous link quality and is used as the basis for throughput and RLF evaluation.
+
+Throughput
+
+A Shannon-capacity approximation is used to estimate achievable data rate:
+
+[
+R = B\log_2(1+\mathrm{SINR}),
+]
+
+where (B) denotes the system bandwidth.
+
+Handover
+
+Cell association is updated according to the received-link-quality criterion. A change in the serving cell is recorded as a handover event.
+
+Radio Link Failure
+
+RLF is detected when the simulated link quality remains below a specified SINR threshold for longer than the configured timeout period.
+
+⸻
+
+8. Running the Simulations
+
+Run the scripts directly from MATLAB after adding the src/ directory to the MATLAB path.
+
+For example:
+
+cd src/baseline
+mobility_cell_eval
+
+For the Doppler-aware model:
+
+cd src/doppler
+mobility_cell_eval_doppler
+
+For the MIMO simulations:
+
+cd src/mimo
+mobility_cell_eval_mc_MIMO
+
+The 5G NR CDL implementation requires the MATLAB 5G Toolbox.
+
+⸻
+
+9. Reproducibility
+
+Simulation parameters such as carrier frequency, bandwidth, UE velocity, deployment geometry, shadowing parameters, fading parameters, and RLF thresholds are defined within the corresponding MATLAB scripts.
+
+For reproducible comparisons, the same simulation configuration should be maintained when comparing SISO, MIMO, and different mobility conditions.
+
+⸻
+
+10. Implementation Notes
+
+The models in this directory represent different levels of channel-modeling fidelity.
+
+The baseline and Doppler-aware implementations use system-level approximations suitable for studying the relationship between mobility and cellular connectivity. The CDL implementation provides a higher-fidelity 5G NR channel model.
+
+In particular, the baseline MIMO implementation should be interpreted as a simplified link-budget gain model, while the explicit MIMO implementations model transmit and receive antenna configurations directly.
+
+This distinction is maintained to make the assumptions and modeling fidelity of each simulation transparent.
